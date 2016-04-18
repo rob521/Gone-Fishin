@@ -1,5 +1,6 @@
 #include<Wire.h>
 #include<Adafruit_MotorShield.h>
+#include<Servo.h>
 #include"utility/Adafruit_MS_PWMServoDriver.h"
 
 const int MODE = DOUBLE;
@@ -7,6 +8,8 @@ const int MODE = DOUBLE;
 String inputstring = "";
 bool motorDirection = 1, stringComplete = false;
 long steps = 0;
+
+Servo servo1, servo2;
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_StepperMotor *stepper = AFMS.getStepper(200, 2);
@@ -20,6 +23,9 @@ void setup() {
   //setup for reading serial
   inputstring.reserve(200);
 
+  servo1.attach(10);
+  servo2.attach(9);
+
   //setup for interrupts
   pinMode(2, INPUT  );
   attachInterrupt(0, halt, CHANGE);
@@ -30,7 +36,7 @@ void setup() {
 void loop(){
   if(stringComplete && motorDirection){
     stepper->step(steps, FORWARD, MODE);
-    Serial.println(inputstring);
+    servoMove();
     inputstring = "";
     stringComplete = false;
     motorDirection = 0;
@@ -38,7 +44,7 @@ void loop(){
   }
   if(stringComplete && !motorDirection){
     stepper->step(steps, BACKWARD, MODE);
-    Serial.println(inputstring);
+    servoMove();
     inputstring = "";
     stringComplete = false;
     motorDirection = 1;
@@ -46,10 +52,18 @@ void loop(){
   }
 }
 
+void servoMove(){
+  if(inputstring == "up"){
+    servo1.write(180);
+    servo2.write(100);
+  }
+  else{
+    servo1.write(0);
+    servo2.write(0);
+  }
+}
+
 void halt(){
-  /*limit = true;
-  delay(2);
-  limit = false;*/
   Serial.println("Interrupted");
 }
 
@@ -59,14 +73,10 @@ void serialEvent() {
     char inChar = (char)Serial.read();
     if (inChar >= '0' && inChar <= '9')
       steps = steps * 10 + atol(&inChar);
-      
-    // add it to the inputString:
-    inputstring += inChar;
-    // if the incoming character is a newline, set a flag
-    // so the main loop can do something about it:
-    if (inChar == (char)13) {
+    else if(inChar == (char)13 || inChar == '\n') 
       stringComplete = true;
-    }
+    else    
+      inputstring += inChar;
   }
 }
 
