@@ -1,0 +1,4 @@
+These files are the main brains and communication of our robot. This code runs on Windows 7 using mingw and should run on all other Windows OS.
+
+Note: We were having some issues linking the files togeather so we had to make all of the linked files a header file.
+
